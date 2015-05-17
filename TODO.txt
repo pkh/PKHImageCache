@@ -1,9 +1,9 @@
 
-* If image file is >= 1MB apply some sort of compression to it before saving/caching image to disk
+* If image file is >= 1MB (or some other similar size) apply compression to it before saving/caching image to disk.
 
 * Clear the local disk caches at some point
 	- When?
-	- Should I clear the in-memory caches at some point in response to a system lifecycle notification? (it seems like this is what SDWebImage does).
+	- Should I clear the in-memory caches at some point in response to a system lifecycle notification?
 
 
 

@@ -81,28 +81,6 @@
             [operation start];
         }
     });
-    
-    /*
-    // *****
-    // Original non-GCD code
-    // *****
-    
-    // First, set the image view's placeholder image
-    imageView.image = placeholder;
-    
-    // Look for image in local cache
-    UIImage *cachedImage = [self searchLocalImageCacheForImageURL:imageURL];
-    
-    if (cachedImage) {
-        imageView.image = cachedImage;
-    } else {
-        // if image NOT present in local cache, enqueue download operation
-        PKHImageDownloadOperation *operation = [PKHImageDownloadOperation new];
-        operation.imageURLString = [imageURL absoluteString];
-        operation.imageView = imageView;
-        [operation start];
-    }
-    */
 }
 
 - (void)insertImageInLocalCache:(UIImage *)image withImageURLString:(NSString *)imageURLString
