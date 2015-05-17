@@ -1,9 +1,8 @@
 
 * If image file is >= 1MB (or some other similar size) apply compression to it before saving/caching image to disk.
 
-* Clear the local disk caches at some point
-	- When?
-	- Should I clear the in-memory caches at some point in response to a system lifecycle notification?
+* Add automatic cache expiration handling
+
 
 
 
