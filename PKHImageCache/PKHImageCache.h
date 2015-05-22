@@ -18,5 +18,6 @@
 - (void)insertImageInLocalCache:(UIImage *)image withImageURLString:(NSString *)imageURLString;
 
 - (void)clearAndEmptyCache;
+- (NSUInteger)cacheSize;
 
 @end

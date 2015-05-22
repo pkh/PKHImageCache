@@ -11,10 +11,14 @@
 #import <CommonCrypto/CommonDigest.h>
 #import "PKHImageDownloadOperation.h"
 
+static const NSInteger kMaxCacheAgeForUnusedImages = 60 * 60 * 24 * 3; // 3 days
+static const NSInteger kMaxCacheAgeForAllImages = 60 * 60 * 24 * 14; // 2 weeks
+
 @interface PKHImageCache ()
 
 @property (nonatomic, strong) NSCache *memoryCache;
 @property (nonatomic) dispatch_queue_t pkhImageCacheQueue;
+@property (nonatomic) NSInteger maxCacheAge;
 
 @end
 
@@ -40,13 +44,37 @@
         _memoryCache = [[NSCache alloc] init];
         _memoryCache.name = @"default";
         
+        _maxCacheAge = kMaxCacheAgeForAllImages;
+        
         _pkhImageCacheQueue = dispatch_queue_create("io.pkh.PKHImageCache", DISPATCH_QUEUE_SERIAL);
         
         dispatch_sync(_pkhImageCacheQueue, ^{
             _fileManager = [NSFileManager new];
         });
+        
+        // Subscribe to app events
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(clearMemory)
+                                                     name:UIApplicationDidReceiveMemoryWarningNotification
+                                                   object:nil];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(cleanDisk)
+                                                     name:UIApplicationWillTerminateNotification
+                                                   object:nil];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(backgroundCleanDisk)
+                                                     name:UIApplicationDidEnterBackgroundNotification
+                                                   object:nil];
+        
     }
     return self;
+}
+
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 #pragma mark -
@@ -179,6 +207,109 @@
     NSString *cacheName = @"io.pkh.PKHImageCache";
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     return [paths[0] stringByAppendingPathComponent:cacheName];
+}
+
+- (NSUInteger)cacheSize
+{
+    __block NSUInteger size = 0;
+    dispatch_sync(self.pkhImageCacheQueue, ^{
+        NSDirectoryEnumerator *fileEnumerator = [_fileManager enumeratorAtPath:[self cacheDirectoryPath]];
+        for (NSString *fileName in fileEnumerator) {
+            NSString *filePath = [[self cacheDirectoryPath] stringByAppendingPathComponent:fileName];
+            NSDictionary *attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:nil];
+            size += [attrs fileSize];
+        }
+    });
+    return size;
+}
+
+#pragma mark - Clean Up
+
+- (void)clearMemory
+{
+    [self.memoryCache removeAllObjects];
+}
+
+- (void)cleanDisk
+{
+    [self cleanDiskWithCompletion:nil];
+}
+
+- (void)cleanDiskWithCompletion:(void(^)(void))completionBlock
+{
+    // clean up the on-disk cache by deleting image files
+    // that haven't been accessed in 3 days (aggressive option)
+    
+    __weak typeof(self)weakSelf = self;
+    
+    dispatch_async(self.pkhImageCacheQueue, ^{
+        
+        NSDate *expirationDate = [NSDate dateWithTimeIntervalSinceNow:-self.maxCacheAge];
+        NSLog(@"expirationDate: %@",expirationDate);
+        
+        NSURL *cacheURL = [NSURL fileURLWithPath:[weakSelf cacheDirectoryPath] isDirectory:YES];
+        NSArray *resourceKeys = @[NSURLIsDirectoryKey, NSURLContentAccessDateKey, NSURLCreationDateKey];
+        
+        NSDirectoryEnumerator *fileEnumerator = [_fileManager enumeratorAtURL:cacheURL
+                                                   includingPropertiesForKeys:resourceKeys
+                                                                      options:NSDirectoryEnumerationSkipsHiddenFiles
+                                                                 errorHandler:NULL];
+        
+        NSMutableSet *fileURLsToDelete = [NSMutableSet new];
+        
+        for (NSURL *fileURL in fileEnumerator) {
+            
+            NSDictionary *resourceValues = [fileURL resourceValuesForKeys:resourceKeys error:NULL];
+            
+            if ([resourceValues[NSURLIsDirectoryKey] boolValue]) {
+                continue;
+            }
+            
+            // if this image is older than 2 weeks, clear it from cache regardless
+            NSDate *creationDate = resourceValues[NSURLCreationDateKey];
+            if ([[creationDate laterDate:expirationDate] isEqualToDate:expirationDate]) {
+                [fileURLsToDelete addObject:fileURL];
+            }
+            
+            // if this image hasn't been accessed in the last 3 days, remove it from the cache
+            NSDate *lastAccessDate = resourceValues[NSURLContentAccessDateKey];
+            NSDate *recentlyUsedExpirationDate = [NSDate dateWithTimeIntervalSinceNow:-kMaxCacheAgeForUnusedImages];
+            
+            if ([[lastAccessDate laterDate:recentlyUsedExpirationDate] isEqualToDate:recentlyUsedExpirationDate]) {
+                if ([fileURLsToDelete containsObject:fileURL] == NO) {
+                    [fileURLsToDelete addObject:fileURL];
+                }
+            }
+            
+        }
+        
+        NSLog(@"Deleting %lu files",(long)[fileURLsToDelete count]);
+        NSLog(@"%@",fileURLsToDelete);
+        
+        for (NSURL *fileURL in fileURLsToDelete) {
+            [_fileManager removeItemAtURL:fileURL error:nil];
+        }
+        
+        if (completionBlock) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completionBlock();
+            });
+        }
+    });
+}
+
+- (void)backgroundCleanDisk
+{
+    UIApplication *app = [UIApplication sharedApplication];
+    __block UIBackgroundTaskIdentifier bgTask = [app beginBackgroundTaskWithExpirationHandler:^{
+        [app endBackgroundTask:bgTask];
+        bgTask = UIBackgroundTaskInvalid;
+    }];
+    
+    [self cleanDiskWithCompletion:^{
+        [app endBackgroundTask:bgTask];
+        bgTask = UIBackgroundTaskInvalid;
+    }];
 }
 
 @end

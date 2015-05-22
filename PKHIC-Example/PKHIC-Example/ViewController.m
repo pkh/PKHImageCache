@@ -90,6 +90,16 @@
     [self configureClearCacheButton];
     
     [self configureCollectionView];
+    
+    NSString *byteCount = [NSByteCountFormatter stringFromByteCount:[[PKHImageCache sharedImageCache] cacheSize] countStyle:NSByteCountFormatterCountStyleFile];
+    NSString *message = [NSString stringWithFormat:@"Your local cache is currently %@ in size",byteCount];
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Cache Size"
+                                                    message:message
+                                                   delegate:nil
+                                          cancelButtonTitle:@"OK"
+                                          otherButtonTitles:nil];
+    [alert show];
 }
 
 - (void)didReceiveMemoryWarning
