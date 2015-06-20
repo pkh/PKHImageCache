@@ -9,14 +9,15 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+typedef void (^PKHImageCacheCompletionBlock)(UIImage *cachedImage, NSURL *cachedImageURL);
+
 @interface PKHImageCache : NSObject
 
 + (PKHImageCache *)sharedImageCache;
 
-- (void)addImageOperationForImageView:(UIImageView *)imageView usingURL:(NSURL *)imageURL andPlaceholderImage:(UIImage *)placeholder;
-
-- (void)insertImageInLocalCache:(UIImage *)image withImageURLString:(NSString *)imageURLString;
+- (void)addImageOperationWithURL:(NSURL *)imageURL withCompletionBlock:(PKHImageCacheCompletionBlock)completionBlock;
 
 - (void)clearAndEmptyCache;
+- (NSUInteger)cacheSize;
 
 @end

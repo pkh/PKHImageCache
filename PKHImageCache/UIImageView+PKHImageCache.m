@@ -13,7 +13,21 @@
 
 - (void)pkhic_setImageWithURL:(NSURL *)imageURL andPlaceholderImage:(UIImage *)placeholder
 {
-    [[PKHImageCache sharedImageCache] addImageOperationForImageView:self usingURL:imageURL andPlaceholderImage:placeholder];
+    self.image = placeholder;
+    
+    if (!imageURL) {    // make sure we have an imageURL to set before continuing
+        return;
+    }
+    
+    __weak typeof(self)weakSelf = self;
+    
+    [[PKHImageCache sharedImageCache] addImageOperationWithURL:imageURL withCompletionBlock:^(UIImage *cachedImage, NSURL *cachedImageURL) {
+        
+        if (cachedImage != nil && [[imageURL absoluteString] isEqualToString:[cachedImageURL absoluteString]]) {
+            weakSelf.image = cachedImage;
+        }
+        
+    }];
 }
 
 @end

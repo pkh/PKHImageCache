@@ -22,8 +22,9 @@
 
 #pragma mark - Public
 
-- (void)start
+- (void)startWithCompletion:(PKHImageDownloaderCompletionBlock)completionBlock
 {
+    _completionBlock = [completionBlock copy];
     _downloadTask = [self.session downloadTaskWithURL:[NSURL URLWithString:self.imageURLString]];
     [_downloadTask resume];
 }
@@ -46,16 +47,10 @@
     NSData *data = [NSData dataWithContentsOfURL:location];
     UIImage *image = [UIImage imageWithData:data];
     
-    [[PKHImageCache sharedImageCache] insertImageInLocalCache:image withImageURLString:self.imageURLString];
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        
-        if (self.imageView != nil) {
-            self.imageView.image = image;
-        }
-        
-    });
-    
+    if (_completionBlock != nil) {
+        _completionBlock(image, [NSURL URLWithString:self.imageURLString]);
+    }
+
     [_session finishTasksAndInvalidate];
 }
 
