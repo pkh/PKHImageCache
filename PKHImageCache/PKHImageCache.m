@@ -79,14 +79,10 @@ static const NSInteger kMaxCacheAgeForAllImages = 60 * 60 * 24 * 14; // 2 weeks
 
 #pragma mark -
 
-- (void)addImageOperationForImageView:(UIImageView *)imageView usingURL:(NSURL *)imageURL andPlaceholderImage:(UIImage *)placeholder
+- (void)addImageOperationWithURL:(NSURL *)imageURL withCompletionBlock:(PKHImageCacheCompletionBlock)completionBlock
 {
-    // First, set the image view's placeholder image
-    dispatch_async(dispatch_get_main_queue(), ^{
-        imageView.image = placeholder;
-    });
-    
     if (!imageURL) {    // if imageURL is nil, skip the rest of this
+        completionBlock(nil, nil);
         return;
     }
     
@@ -96,19 +92,26 @@ static const NSInteger kMaxCacheAgeForAllImages = 60 * 60 * 24 * 14; // 2 weeks
         
         // Look for image in local cache
         UIImage *cachedImage = [weakSelf searchLocalImageCacheForImageURL:imageURL];
-    
+        
         if (cachedImage) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                imageView.image = cachedImage;
+                completionBlock(cachedImage, imageURL);
             });
         } else {
             // if image NOT present in local cache, enqueue download operation
             PKHImageDownloadOperation *operation = [PKHImageDownloadOperation new];
             operation.imageURLString = [imageURL absoluteString];
-            operation.imageView = imageView;
-            [operation start];
+            [operation startWithCompletion:^(UIImage *image, NSURL *imageURL) {
+                
+                [weakSelf insertImageInLocalCache:image withImageURLString:[imageURL absoluteString]];
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    completionBlock(image, imageURL);
+                });
+            }];
         }
     });
+    
 }
 
 - (void)insertImageInLocalCache:(UIImage *)image withImageURLString:(NSString *)imageURLString

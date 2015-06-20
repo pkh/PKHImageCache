@@ -9,13 +9,12 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-typedef void (^PKHImageDownloaderCompletionBlock)(UIImage *image, NSData *data, NSError *error);
+typedef void (^PKHImageDownloaderCompletionBlock)(UIImage *image, NSURL *imageURL);
 
 @interface PKHImageDownloadOperation : NSObject
 
 @property (nonatomic, strong) NSString *imageURLString;
-@property (nonatomic, weak) UIImageView *imageView;
 
-- (void)start;
+- (void)startWithCompletion:(PKHImageDownloaderCompletionBlock)completionBlock;
 
 @end
