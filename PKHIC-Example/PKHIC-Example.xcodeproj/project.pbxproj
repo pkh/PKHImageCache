@@ -18,6 +18,7 @@
 		7FB300321B091D660040E236 /* PKHImageDownloadOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 7FB3002E1B091D660040E236 /* PKHImageDownloadOperation.m */; };
 		7FB300331B091D660040E236 /* UIImageView+PKHImageCache.m in Sources */ = {isa = PBXBuildFile; fileRef = 7FB300301B091D660040E236 /* UIImageView+PKHImageCache.m */; };
 		7FB3FFFF1B091CAB0040E236 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 7FB3FFFE1B091CAB0040E236 /* main.m */; };
+		AFA3877B1B39F6C100514403 /* PKHImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA3877A1B39F6C100514403 /* PKHImageCache.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,6 +53,8 @@
 		7FB3FFF91B091CAB0040E236 /* PKHIC-Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "PKHIC-Example.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7FB3FFFD1B091CAB0040E236 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7FB3FFFE1B091CAB0040E236 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		AFA387791B39F6C100514403 /* PKHIC-Example-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "PKHIC-Example-Bridging-Header.h"; sourceTree = "<group>"; };
+		AFA3877A1B39F6C100514403 /* PKHImageCache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PKHImageCache.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +101,8 @@
 				7FB3002C1B091D660040E236 /* PKHImageCache.m */,
 				7FB3002D1B091D660040E236 /* PKHImageDownloadOperation.h */,
 				7FB3002E1B091D660040E236 /* PKHImageDownloadOperation.m */,
+				AFA3877A1B39F6C100514403 /* PKHImageCache.swift */,
+				AFA387791B39F6C100514403 /* PKHIC-Example-Bridging-Header.h */,
 			);
 			name = PKHImageCache;
 			path = ../../PKHImageCache;
@@ -256,6 +261,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AFA3877B1B39F6C100514403 /* PKHImageCache.swift in Sources */,
 				7FB300021B091CAB0040E236 /* AppDelegate.m in Sources */,
 				7FB300311B091D660040E236 /* PKHImageCache.m in Sources */,
 				7FB300331B091D660040E236 /* UIImageView+PKHImageCache.m in Sources */,
@@ -372,9 +378,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				INFOPLIST_FILE = "PKHIC-Example/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "../PKHImageCache/PKHIC-Example-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
@@ -382,9 +391,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
 				INFOPLIST_FILE = "PKHIC-Example/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "../PKHImageCache/PKHIC-Example-Bridging-Header.h";
 			};
 			name = Release;
 		};
