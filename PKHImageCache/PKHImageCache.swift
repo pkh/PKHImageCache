@@ -35,7 +35,7 @@ extension UIImageView {
     
 }
 
-class PKHImageCache {
+class PKHImageCache : NSObject {
     
     static let sharedImageCache = PKHImageCache()
     
@@ -50,7 +50,7 @@ class PKHImageCache {
     
     // MARK:
     
-    init() {
+    override init() {
         
         self.memoryCache = NSCache()
         self.memoryCache.name = "default"
@@ -59,15 +59,23 @@ class PKHImageCache {
         
         self.pkhImageCacheQueue = dispatch_queue_create("io.pkh.PKHImageCache", DISPATCH_QUEUE_SERIAL)
         /*
-        dispatch_sync(pkhImageCacheQueue, {
+        dispatch_sync(queue: self.pkhImageCacheQueue) { () -> Void in
             self.fileManager = NSFileManager()
-        })
+        }
         */
+        super.init()
+        
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "clearMemory", name: UIApplicationDidReceiveMemoryWarningNotification, object: nil)
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "cleanDisk", name: UIApplicationWillTerminateNotification, object: nil)
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "backgroundCleanDisk", name: UIApplicationDidEnterBackgroundNotification, object: nil)
         
     }
+    
+    deinit {
+        NSNotificationCenter.defaultCenter().removeObserver(self)
+    }
+    
+    // MARK:
     
     func addImageOperation(imageURL: NSURL?, completionBlock: PKHImageCacheCompletionBlock?) {
         
@@ -77,8 +85,6 @@ class PKHImageCache {
             }
             return
         }
-        
-        weak var weakSelf = self
         
         dispatch_async(self.pkhImageCacheQueue, { () -> Void in
             
@@ -102,9 +108,6 @@ class PKHImageCache {
                     }
                     
                 })
-                
-                
-                
                 
             }
             
@@ -130,7 +133,7 @@ class PKHImageCache {
     
     }
     
-    func clearAndEmptyCache() {
+    @objc func clearAndEmptyCache() {
         dispatch_async(self.pkhImageCacheQueue, { () -> Void in
             
             // clear the in-memory cache
@@ -147,6 +150,19 @@ class PKHImageCache {
             self.fileManager.createDirectoryAtPath(self.cacheDirectoryPath(), withIntermediateDirectories: false, attributes: nil, error: nil)
 
         })
+    }
+    
+    @objc func cacheSize() -> Int {
+        var size: Int = 0;
+        dispatch_sync(self.pkhImageCacheQueue, { () -> Void in
+            let fileEnumerator: NSDirectoryEnumerator = self.fileManager.enumeratorAtPath(self.cacheDirectoryPath())!
+            for fileName in fileEnumerator {
+                let filePath: String = self.cacheDirectoryPath().stringByAppendingPathComponent(fileName as! String)
+                let attrs: NSDictionary = self.fileManager.attributesOfItemAtPath(filePath, error: nil)!
+                size += Int(attrs.fileSize())
+            }
+        });
+        return size
     }
     
     // MARK: Private
@@ -207,8 +223,94 @@ class PKHImageCache {
         return paths[0].stringByAppendingPathComponent(cacheName)
     }
     
-    private func cacheSize() {
+    // MARK: Clean Up
+    
+    private func clearMemory() {
+        println("clearMemory")
+        self.memoryCache.removeAllObjects()
+    }
+    
+    private func cleanDisk() {
+        println("cleanDisk")
+        self.cleanDiskWithCompletion({ _ in })
+    }
+    
+    private func cleanDiskWithCompletion(completion: ()->() ) {
         
+        println("cleanDiskWithCompletion")
+        
+        // clean up the on-disk cache by deleting image files
+        // that haven't been accessed in 3 days (aggressive option)
+        
+        dispatch_async(self.pkhImageCacheQueue, { () -> Void in
+            
+            let expirationDate: NSDate = NSDate().dateByAddingTimeInterval(NSTimeInterval(-self.maxCacheAge))
+            println("expirationDate: \(expirationDate)")
+            
+            let cacheURL: NSURL = NSURL(fileURLWithPath: self.cacheDirectoryPath(), isDirectory: false)!
+            let resourceKeys: [String] = [NSURLIsDirectoryKey, NSURLContentAccessDateKey, NSURLCreationDateKey]
+            
+            let fileEnumerator: NSDirectoryEnumerator = self.fileManager.enumeratorAtURL(cacheURL, includingPropertiesForKeys: resourceKeys, options: .SkipsHiddenFiles, errorHandler: nil)!
+            
+            var fileURLsToDelete: NSMutableSet = NSMutableSet()
+            
+            for fileURLString in fileEnumerator {
+                
+                let fileURL: NSURL = NSURL(string: fileURLString as! String)!
+                let resourceValues: NSDictionary = fileURL.resourceValuesForKeys(resourceKeys, error: nil)!
+                
+                if (resourceValues[NSURLIsDirectoryKey]?.boolValue == true) {
+                    continue
+                }
+                
+                // if this image is older than 2 weeks, clear it from cache regardless
+                let creationDate: NSDate = resourceValues[NSURLCreationDateKey] as! NSDate
+                if  creationDate.laterDate(expirationDate).isEqualToDate(expirationDate) {
+                    fileURLsToDelete.addObject(fileURL)
+                }
+                
+                // if this image hasn't been accessed in the last 3 days, remove it from the cache
+                let lastAccessDate: NSDate = resourceValues[NSURLContentAccessDateKey] as! NSDate
+                let recentlyUsedExpirationDate: NSDate = NSDate().dateByAddingTimeInterval(NSTimeInterval(-self.kMaxCacheAgeForUnusedImages))
+                
+                if lastAccessDate.laterDate(recentlyUsedExpirationDate).isEqualToDate(recentlyUsedExpirationDate) {
+                    if fileURLsToDelete.containsObject(fileURL) == false {
+                        fileURLsToDelete.addObject(fileURL)
+                    }
+                }
+                
+            }
+            
+            println("Deleting \(fileURLsToDelete.count) files")
+            println("\(fileURLsToDelete)")
+            
+            for fileURL in fileURLsToDelete {
+                self.fileManager.removeItemAtURL(fileURL as! NSURL, error: nil)
+            }
+            
+            dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                completion()
+            })
+            
+        })
+        
+    }
+    
+    private func backgroundCleanDisk() {
+        
+        println("backgroundCleanDisk")
+        /*
+        let app: UIApplication = UIApplication.sharedApplication()
+        var bgTask: UIBackgroundTaskIdentifier = app.beginBackgroundTaskWithExpirationHandler { () -> Void in
+            app.endBackgroundTask(bgTask)
+            bgTask = UIBackgroundTaskInvalid
+        }
+        
+        self.cleanDiskWithCompletion { () -> () in
+            app.endBackgroundTask(bgTask)
+            bgTask = UIBackgroundTaskInvalid
+        }
+        */
     }
     
 }
