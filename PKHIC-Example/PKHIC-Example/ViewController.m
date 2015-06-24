@@ -8,9 +8,10 @@
 
 #import "ViewController.h"
 #import "ImageCollectionViewCell.h"
-#import "UIImageView+PKHImageCache.h"
+#import "PKHIC_Example-Swift.h"
+//#import "UIImageView+PKHImageCache.h"
 
-#import "PKHImageCache.h"   // for testing clear image cache method
+//#import "PKHImageCache.h"   // for testing clear image cache method
 
 
 @interface ViewController () <UICollectionViewDataSource, UICollectionViewDelegate>
@@ -90,7 +91,7 @@
     [self configureClearCacheButton];
     
     [self configureCollectionView];
-    
+    /*
     NSString *byteCount = [NSByteCountFormatter stringFromByteCount:[[PKHImageCache sharedImageCache] cacheSize] countStyle:NSByteCountFormatterCountStyleFile];
     NSString *message = [NSString stringWithFormat:@"Your local cache is currently %@ in size",byteCount];
     
@@ -100,6 +101,7 @@
                                           cancelButtonTitle:@"OK"
                                           otherButtonTitles:nil];
     [alert show];
+    */
 }
 
 - (void)didReceiveMemoryWarning
@@ -195,7 +197,9 @@
         imageURL = [NSURL URLWithString:link];
     }
     
-    [cell.imageView pkhic_setImageWithURL:imageURL andPlaceholderImage:[UIImage imageNamed:@"placeholder"]];
+    [cell.imageView pkhic_setImageWith:imageURL placeholder:[UIImage imageNamed:@"placeholder"]];
+    
+    //[cell.imageView pkhic_setImageWithURL:imageURL andPlaceholderImage:[UIImage imageNamed:@"placeholder"]];
 }
 
 - (ImageCollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
@@ -215,7 +219,7 @@
         [self.collectionView reloadData];
         [self.clearCacheButton setTitle:@"Clear Cache" forState:UIControlStateNormal];
     } else {
-        [[PKHImageCache sharedImageCache] clearAndEmptyCache];
+        //[[PKHImageCache sharedImageCache] clearAndEmptyCache];
         [self.collectionView reloadData];
         [self.clearCacheButton setTitle:@"Reload Collection View" forState:UIControlStateNormal];
     }

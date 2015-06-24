@@ -13,7 +13,7 @@ typealias PKHImageCacheCompletionBlock = (cachedImage: UIImage?, cachedImageURL:
 
 extension UIImageView {
     
-    func pkhic_setImageWith(imageURL: NSURL?, placeholder: UIImage?) {
+    @objc func pkhic_setImageWith(imageURL: NSURL?, placeholder: UIImage?) {
         
         self.image = placeholder!
         
@@ -91,6 +91,19 @@ class PKHImageCache {
                 })
             } else {
                 // image NOT present in local cache, enqueue download operation
+                let operation: PKHImageDownloadOperation = PKHImageDownloadOperation()
+                operation.start(imageURL!.absoluteString!, completionBlock: { (image, imageURL) -> Void in
+                    self.insertImageInLocalCache(image, urlString: imageURL!.absoluteString!)
+                    
+                    if let completion = completionBlock {
+                        dispatch_async(dispatch_get_main_queue(), { () -> Void in
+                            completion(cachedImage: image, cachedImageURL: imageURL!)
+                        })
+                    }
+                    
+                })
+                
+                
                 
                 
             }
@@ -114,8 +127,7 @@ class PKHImageCache {
             self.fileManager.createFileAtPath(diskImagePath, contents: UIImagePNGRepresentation(image), attributes: nil)
             self.memoryCache.setObject(image, forKey: hashedFileName)
         })
-        
-        
+    
     }
     
     func clearAndEmptyCache() {

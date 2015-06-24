@@ -14,11 +14,9 @@
 		7FB300271B091CEE0040E236 /* ImageCollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 7FB300231B091CEE0040E236 /* ImageCollectionViewCell.m */; };
 		7FB300281B091CEE0040E236 /* ImageCollectionViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7FB300241B091CEE0040E236 /* ImageCollectionViewCell.xib */; };
 		7FB300291B091CEE0040E236 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7FB300261B091CEE0040E236 /* ViewController.m */; };
-		7FB300311B091D660040E236 /* PKHImageCache.m in Sources */ = {isa = PBXBuildFile; fileRef = 7FB3002C1B091D660040E236 /* PKHImageCache.m */; };
-		7FB300321B091D660040E236 /* PKHImageDownloadOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 7FB3002E1B091D660040E236 /* PKHImageDownloadOperation.m */; };
-		7FB300331B091D660040E236 /* UIImageView+PKHImageCache.m in Sources */ = {isa = PBXBuildFile; fileRef = 7FB300301B091D660040E236 /* UIImageView+PKHImageCache.m */; };
 		7FB3FFFF1B091CAB0040E236 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 7FB3FFFE1B091CAB0040E236 /* main.m */; };
 		AFA3877B1B39F6C100514403 /* PKHImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA3877A1B39F6C100514403 /* PKHImageCache.swift */; };
+		AFC9C3591B3B023F004C4ED0 /* PKHImageDownloadOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFC9C3581B3B023F004C4ED0 /* PKHImageDownloadOperation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,17 +42,12 @@
 		7FB300241B091CEE0040E236 /* ImageCollectionViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ImageCollectionViewCell.xib; sourceTree = "<group>"; };
 		7FB300251B091CEE0040E236 /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		7FB300261B091CEE0040E236 /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		7FB3002B1B091D660040E236 /* PKHImageCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PKHImageCache.h; sourceTree = "<group>"; };
-		7FB3002C1B091D660040E236 /* PKHImageCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PKHImageCache.m; sourceTree = "<group>"; };
-		7FB3002D1B091D660040E236 /* PKHImageDownloadOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PKHImageDownloadOperation.h; sourceTree = "<group>"; };
-		7FB3002E1B091D660040E236 /* PKHImageDownloadOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PKHImageDownloadOperation.m; sourceTree = "<group>"; };
-		7FB3002F1B091D660040E236 /* UIImageView+PKHImageCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImageView+PKHImageCache.h"; sourceTree = "<group>"; };
-		7FB300301B091D660040E236 /* UIImageView+PKHImageCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImageView+PKHImageCache.m"; sourceTree = "<group>"; };
 		7FB3FFF91B091CAB0040E236 /* PKHIC-Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "PKHIC-Example.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7FB3FFFD1B091CAB0040E236 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7FB3FFFE1B091CAB0040E236 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		AFA387791B39F6C100514403 /* PKHIC-Example-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "PKHIC-Example-Bridging-Header.h"; sourceTree = "<group>"; };
 		AFA3877A1B39F6C100514403 /* PKHImageCache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PKHImageCache.swift; sourceTree = "<group>"; };
+		AFC9C3581B3B023F004C4ED0 /* PKHImageDownloadOperation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PKHImageDownloadOperation.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,14 +88,9 @@
 		7FB3002A1B091D660040E236 /* PKHImageCache */ = {
 			isa = PBXGroup;
 			children = (
-				7FB3002F1B091D660040E236 /* UIImageView+PKHImageCache.h */,
-				7FB300301B091D660040E236 /* UIImageView+PKHImageCache.m */,
-				7FB3002B1B091D660040E236 /* PKHImageCache.h */,
-				7FB3002C1B091D660040E236 /* PKHImageCache.m */,
-				7FB3002D1B091D660040E236 /* PKHImageDownloadOperation.h */,
-				7FB3002E1B091D660040E236 /* PKHImageDownloadOperation.m */,
-				AFA3877A1B39F6C100514403 /* PKHImageCache.swift */,
 				AFA387791B39F6C100514403 /* PKHIC-Example-Bridging-Header.h */,
+				AFA3877A1B39F6C100514403 /* PKHImageCache.swift */,
+				AFC9C3581B3B023F004C4ED0 /* PKHImageDownloadOperation.swift */,
 			);
 			name = PKHImageCache;
 			path = ../../PKHImageCache;
@@ -263,12 +251,10 @@
 			files = (
 				AFA3877B1B39F6C100514403 /* PKHImageCache.swift in Sources */,
 				7FB300021B091CAB0040E236 /* AppDelegate.m in Sources */,
-				7FB300311B091D660040E236 /* PKHImageCache.m in Sources */,
-				7FB300331B091D660040E236 /* UIImageView+PKHImageCache.m in Sources */,
 				7FB300271B091CEE0040E236 /* ImageCollectionViewCell.m in Sources */,
 				7FB300291B091CEE0040E236 /* ViewController.m in Sources */,
 				7FB3FFFF1B091CAB0040E236 /* main.m in Sources */,
-				7FB300321B091D660040E236 /* PKHImageDownloadOperation.m in Sources */,
+				AFC9C3591B3B023F004C4ED0 /* PKHImageDownloadOperation.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,6 +365,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
 				INFOPLIST_FILE = "PKHIC-Example/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -392,6 +380,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				DEFINES_MODULE = YES;
+				EMBEDDED_CONTENT_CONTAINS_SWIFT = YES;
 				INFOPLIST_FILE = "PKHIC-Example/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
