@@ -39,14 +39,14 @@ class PKHImageCache : NSObject {
     
     static let sharedImageCache = PKHImageCache()
     
-    let kMaxCacheAgeForUnusedImages: Int = 60 * 60 * 24 * 3; // 3 days
-    let kMaxCacheAgeForAllImages: Int = 60 * 60 * 24 * 14; // 2 weeks
+    private let kMaxCacheAgeForUnusedImages: Int = 60 * 60 * 24 * 3; // 3 days
+    private let kMaxCacheAgeForAllImages: Int = 60 * 60 * 24 * 14; // 2 weeks
     
-    var memoryCache: NSCache
-    var pkhImageCacheQueue: dispatch_queue_t
-    var maxCacheAge: Int
+    private var memoryCache: NSCache
+    private var pkhImageCacheQueue: dispatch_queue_t
+    private var maxCacheAge: Int
     
-    let fileManager: NSFileManager = NSFileManager()
+    private let fileManager: NSFileManager = NSFileManager()
     
     // MARK:
     
