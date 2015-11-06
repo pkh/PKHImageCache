@@ -98,8 +98,8 @@ class PKHImageCache : NSObject {
             } else {
                 // image NOT present in local cache, enqueue download operation
                 let operation: PKHImageDownloadOperation = PKHImageDownloadOperation()
-                operation.start(imageURL!.absoluteString!, completionBlock: { (image, imageURL) -> Void in
-                    self.insertImageInLocalCache(image, urlString: imageURL!.absoluteString!)
+                operation.start(imageURL!.absoluteString, completionBlock: { (image, imageURL) -> Void in
+                    self.insertImageInLocalCache(image, urlString: imageURL!.absoluteString)
                     
                     if let completion = completionBlock {
                         dispatch_async(dispatch_get_main_queue(), { () -> Void in
@@ -123,10 +123,17 @@ class PKHImageCache : NSObject {
             
             if (self.fileManager.fileExistsAtPath(cacheDirectoryPath) == false) {
                 // create cache directory
-                self.fileManager.createDirectoryAtPath(cacheDirectoryPath, withIntermediateDirectories: false, attributes: nil, error: nil)
+                do {
+                    try self.fileManager.createDirectoryAtPath(cacheDirectoryPath, withIntermediateDirectories: false, attributes: nil)
+                } catch let error as NSError {
+                    print("error creating the on-disk cache folder: \(error.description)")
+                }
+
             }
             
-            let diskImagePath = cacheDirectoryPath.stringByAppendingPathComponent(hashedFileName)
+            let diskImagePathURL: NSURL = (NSURL(string: cacheDirectoryPath)?.URLByAppendingPathComponent(hashedFileName))!
+            let diskImagePath: String = diskImagePathURL.absoluteString
+
             self.fileManager.createFileAtPath(diskImagePath, contents: UIImagePNGRepresentation(image), attributes: nil)
             self.memoryCache.setObject(image, forKey: hashedFileName)
         })
@@ -140,61 +147,84 @@ class PKHImageCache : NSObject {
             self.memoryCache.removeAllObjects()
             
             // clear the on-disk cache
-            var error: NSError?
-            self.fileManager.removeItemAtPath(self.cacheDirectoryPath(), error: &error)
-            if (error != nil) {
-                println("Error removing disk cache: \(error)")
+            do {
+                try self.fileManager.removeItemAtPath(self.cacheDirectoryPath())
+            } catch let error as NSError {
+                print("error clearing the on-disk cache: \(error.description)")
             }
             
             // Re-create the on-disk cache folder
-            self.fileManager.createDirectoryAtPath(self.cacheDirectoryPath(), withIntermediateDirectories: false, attributes: nil, error: nil)
+            do {
+                try self.fileManager.createDirectoryAtPath(self.cacheDirectoryPath(), withIntermediateDirectories: false, attributes: nil)
+            } catch let error as NSError {
+                print("error re-creating the on-disk cache folder: \(error.description)")
+            }
 
         })
     }
-    
+    /*
     @objc func cacheSize() -> Int {
         var size: Int = 0;
         dispatch_sync(self.pkhImageCacheQueue, { () -> Void in
-            let fileEnumerator: NSDirectoryEnumerator = self.fileManager.enumeratorAtPath(self.cacheDirectoryPath())!
+            let fileEnumerator: NSDirectoryEnumerator? = self.fileManager.enumeratorAtPath(self.cacheDirectoryPath())
+            
+            
             for fileName in fileEnumerator {
-                let filePath: String = self.cacheDirectoryPath().stringByAppendingPathComponent(fileName as! String)
-                let attrs: NSDictionary = self.fileManager.attributesOfItemAtPath(filePath, error: nil)!
-                size += Int(attrs.fileSize())
+                let filePathURL: NSURL = (NSURL(string: self.cacheDirectoryPath())?.URLByAppendingPathComponent(fileName as! String))!
+                
+                
+                
+                //let filePath: String = self.cacheDirectoryPath().stringByAppendingPathComponent(fileName as! String)
+                //let attrs: NSDictionary = self.fileManager.attributesOfItemAtPath(filePathURL.absoluteString)
+                let attrs: NSDictionary
+                do {
+                    try attrs = self.fileManager.attributesOfItemAtPath(filePathURL.absoluteString)
+                    size += Int(attrs.fileSize())
+                } catch let error as NSError {
+                    print("error accessing file \(filePathURL.absoluteString)")
+                    print("\(error.description)")
+                }
+                
             }
         });
         return size
     }
-    
+    */
     // MARK: Private
     
     private func searchLocalImageCacheForImageURL(imageURL: NSURL) -> UIImage? {
         
-        let imageURLHash = self.hashedImageURLString(imageURL.absoluteString!)
+        let imageURLHash = self.hashedImageURLString(imageURL.absoluteString)
         
         // First, search the in-memory cache
-        var cachedImage: UIImage? = self.memoryCache.objectForKey(imageURLHash) as? UIImage
+        let cachedImage: UIImage? = self.memoryCache.objectForKey(imageURLHash) as? UIImage
         if (cachedImage != nil) {
-            println("Have image in in-memory cache")
+            print("Have image in in-memory cache")
             return cachedImage
         }
         
         // Second, search the cache on disk
-        var imageData: NSData? = NSData(contentsOfFile: self.diskImagePathWithHash(imageURLHash))
+        let imageData: NSData? = NSData(contentsOfFile: self.diskImagePathWithHash(imageURLHash)!)
         if (imageData != nil) {
-            println("Have image in on-disk cache!")
+            print("Have image in on-disk cache!")
             let image = UIImage(data: imageData!)
             self.memoryCache.setObject(image!, forKey: imageURLHash)
             return image
         }
         
-        println("Can't find image locally...")
+        print("Can't find image locally...")
         return nil
     }
     
     // MARK: Helpers
     
-    private func diskImagePathWithHash(hash: String) -> String {
-        return self.cacheDirectoryPath().stringByAppendingPathComponent(hash)
+    private func diskImagePathWithHash(hash: String) -> String? {
+        let pathURL: NSURL? = (NSURL(string: self.cacheDirectoryPath())?.URLByAppendingPathComponent(hash))
+        if pathURL != nil {
+            return pathURL!.absoluteString
+        } else {
+            return nil
+        }
     }
     
     private func hashedImageURLString(imageURLString: String) -> String {
@@ -206,7 +236,7 @@ class PKHImageCache : NSObject {
         
         CC_MD5(str!, strLen, result)
         
-        var hash = NSMutableString()
+        let hash = NSMutableString()
         for i in 0..<digestLen {
             hash.appendFormat("%02x", result[i])
         }
@@ -219,25 +249,25 @@ class PKHImageCache : NSObject {
     
     private func cacheDirectoryPath() -> String {
         let cacheName: String = "io.pkh.PKHImageCache"
-        let paths: NSArray = NSSearchPathForDirectoriesInDomains(.CachesDirectory, .UserDomainMask, true) as! [String]
+        let paths: NSArray = NSSearchPathForDirectoriesInDomains(.CachesDirectory, .UserDomainMask, true) 
         return paths[0].stringByAppendingPathComponent(cacheName)
     }
     
     // MARK: Clean Up
     
     private func clearMemory() {
-        println("clearMemory")
+        print("clearMemory")
         self.memoryCache.removeAllObjects()
     }
     
     private func cleanDisk() {
-        println("cleanDisk")
+        print("cleanDisk")
         self.cleanDiskWithCompletion({ _ in })
     }
     
     private func cleanDiskWithCompletion(completion: ()->() ) {
         
-        println("cleanDiskWithCompletion")
+        print("cleanDiskWithCompletion")
         
         // clean up the on-disk cache by deleting image files
         // that haven't been accessed in 3 days (aggressive option)
@@ -245,32 +275,38 @@ class PKHImageCache : NSObject {
         dispatch_async(self.pkhImageCacheQueue, { () -> Void in
             
             let expirationDate: NSDate = NSDate().dateByAddingTimeInterval(NSTimeInterval(-self.maxCacheAge))
-            println("expirationDate: \(expirationDate)")
+            print("expirationDate: \(expirationDate)")
             
-            let cacheURL: NSURL = NSURL(fileURLWithPath: self.cacheDirectoryPath(), isDirectory: false)!
+            let cacheURL: NSURL = NSURL(fileURLWithPath: self.cacheDirectoryPath(), isDirectory: false)
             let resourceKeys: [String] = [NSURLIsDirectoryKey, NSURLContentAccessDateKey, NSURLCreationDateKey]
             
             let fileEnumerator: NSDirectoryEnumerator = self.fileManager.enumeratorAtURL(cacheURL, includingPropertiesForKeys: resourceKeys, options: .SkipsHiddenFiles, errorHandler: nil)!
             
-            var fileURLsToDelete: NSMutableSet = NSMutableSet()
+            let fileURLsToDelete: NSMutableSet = NSMutableSet()
             
             for fileURLString in fileEnumerator {
                 
                 let fileURL: NSURL = NSURL(string: fileURLString as! String)!
-                let resourceValues: NSDictionary = fileURL.resourceValuesForKeys(resourceKeys, error: nil)!
+                var resourceValues: NSDictionary?
                 
-                if (resourceValues[NSURLIsDirectoryKey]?.boolValue == true) {
+                do {
+                    try resourceValues = fileURL.resourceValuesForKeys(resourceKeys)
+                } catch let error as NSError {
+                    print(error.description)
+                }
+                
+                if (resourceValues?[NSURLIsDirectoryKey]?.boolValue == true) {
                     continue
                 }
                 
                 // if this image is older than 2 weeks, clear it from cache regardless
-                let creationDate: NSDate = resourceValues[NSURLCreationDateKey] as! NSDate
+                let creationDate: NSDate = resourceValues?[NSURLCreationDateKey] as! NSDate
                 if  creationDate.laterDate(expirationDate).isEqualToDate(expirationDate) {
                     fileURLsToDelete.addObject(fileURL)
                 }
                 
                 // if this image hasn't been accessed in the last 3 days, remove it from the cache
-                let lastAccessDate: NSDate = resourceValues[NSURLContentAccessDateKey] as! NSDate
+                let lastAccessDate: NSDate = resourceValues?[NSURLContentAccessDateKey] as! NSDate
                 let recentlyUsedExpirationDate: NSDate = NSDate().dateByAddingTimeInterval(NSTimeInterval(-self.kMaxCacheAgeForUnusedImages))
                 
                 if lastAccessDate.laterDate(recentlyUsedExpirationDate).isEqualToDate(recentlyUsedExpirationDate) {
@@ -281,11 +317,17 @@ class PKHImageCache : NSObject {
                 
             }
             
-            println("Deleting \(fileURLsToDelete.count) files")
-            println("\(fileURLsToDelete)")
+            print("Deleting \(fileURLsToDelete.count) files")
+            print("\(fileURLsToDelete)")
             
             for fileURL in fileURLsToDelete {
-                self.fileManager.removeItemAtURL(fileURL as! NSURL, error: nil)
+                
+                do {
+                    try self.fileManager.removeItemAtURL(fileURL as! NSURL)
+                } catch let error as NSError {
+                    print("error removing URL: \(error.description)")
+                }
+                
             }
             
             dispatch_async(dispatch_get_main_queue(), { () -> Void in
@@ -298,7 +340,7 @@ class PKHImageCache : NSObject {
     
     private func backgroundCleanDisk() {
         
-        println("backgroundCleanDisk")
+        print("backgroundCleanDisk")
         /*
         let app: UIApplication = UIApplication.sharedApplication()
         var bgTask: UIBackgroundTaskIdentifier = app.beginBackgroundTaskWithExpirationHandler { () -> Void in
